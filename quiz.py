@@ -18,7 +18,7 @@ class quiz():
         try:
             self.questions = np.loadtxt(file,delimiter=",",encoding="ISO-8859-1",dtype="str")
             self.answers = [q[1:] for q in self.questions] #Alle svar (første er det korrekte)
-            self.questions=[q[0] for q in self.questions ] #Spørgsmål
+            self.questions = (q[0] for q in self.questions) #Spørgsmål
                        
         except OSError:
             print("Questions are not found is not found!")
@@ -30,7 +30,8 @@ class quiz():
         
         #Shufle the questions and save the correct answer
         self.ans_true = [p[0] for p in self.answers] #Correct answer
-        [shuffle(p) for p in self.answers] #shuffle the answers 
+        [shuffle(p) for p in self.answers] #shuffle the answers
+        self.answers = iter(self.answers)
         
     def start(self):
         c=1 #Count for questions
@@ -112,42 +113,90 @@ def create_gui(q):
     #Get resolution of screen
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
-    window.geometry(f"{screen_width}x{screen_height}")
-    frame = tkinter.Frame(window)
-    frame.pack(fill=tkinter.BOTH,expand=True)
+    window.geometry(f"{int(screen_width*0.5)}x{int(screen_height*0.5)}")
+    
+    frame_score = tkinter.Frame(window)
+    frame_score.pack(anchor="w")
 
 
     ###  Print the score-board ###
     #title
-    score_title = tkinter.Label(frame,text="Score")
+    score_title = tkinter.Label(frame_score,text="Score")
     score_title.config(font=("Courier",40))
-    score_title2 = tkinter.Label(frame,text="Score2")
-    score_title2.config(font=("Courier",40))
-    #score_title.grid(side=tkinter.TOP,anchor="w")
     score_title.grid(row=0,column=0)
-    score_title2.grid(row=1,column=0)
 
-    """
     #
     #Scores
-    for team,scores in zip(q.teams,q.score):
-        score = tkinter.Label(frame,text=f"{team}: {scores}")
+    for i,(team,scores) in enumerate(zip(q.teams,q.score)):
+        score = tkinter.Label(frame_score,text=f"{team}: {scores}")
         score.config(font=("Courier",20))
-        score.pack(side=tkinter.TOP,anchor="w")
+        score.grid(row=i+1,column=0)
+
+    
+    
+    
+    
+    
+    ## Create the question,asnwers etc ##
+
+    #Frame
+    frame_questions = tkinter.Frame(window,bg="white")
+    frame_questions.pack(side=tkinter.TOP)
+
+    #Functions for updating the question and answers
+    def nextQuestion():
+        try:
+            question_box.configure(text = q.questions.__next__())
+        except StopIteration:
+            question_box.configure(text = "<The End>")
+    
+   
+    def nextAnswer():
+        try:
+            cur_answers = q.answers.__next__()
+            for ans,but in zip(cur_answers,radio_buttons_dict.values()):
+                but.configure(text = ans)
+        except StopIteration:
+                
+                for but in radio_buttons_dict.values():
+                    but.configure(text = "")
+    
+    def nexts():
+        """
+        Updates questions and answers
+        """
+        nextAnswer()
+        nextQuestion()
 
 
-    ### Print the question ###
+
+        
+
+    #Box with the question
+    question_box = tkinter.Message(frame_questions,bg = "lightblue",text = q.questions.__next__(),font=("Helvetica",20),justify=tkinter.LEFT,aspect=200,relief=tkinter.SUNKEN) #Initialize with the first question
+    question_box.pack()
+
+
+    #Radio buttons for the different answer-choices
+    chosen_answer = tkinter.IntVar()
+    radio_buttons_dict =  {"radio_"+str(i):tkinter.Radiobutton(frame_questions,text=ans,variable=chosen_answer,value=i) for i,ans in enumerate(q.answers.__next__())} #Create dictionary of buttons - initialize with the first answers
+
+
+    #Print the radio buttons to the creen
+    for but in radio_buttons_dict.values():
+        but.pack()
 
 
 
+    #Create button for next question and answer
+    tkinter.Button(text="Next question!",bg="green",command=nexts).pack()
 
-    tkinter.Button(frame, text = "Start!",command=q.start,bg="green").pack(anchor="s") #Start button
-    tkinter.Canvas(frame,bg="green",height=screen_height*1/4,width=screen_height*1/4).place(relx=1.0,rely=0.0) #Scoreboard """
+
     window.mainloop()
     
 
 if __name__=="__main__":
-    create_gui(2)
-    #main()
+    #create_gui(2)
+    main()
     
     
