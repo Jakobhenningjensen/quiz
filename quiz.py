@@ -28,6 +28,7 @@ class quiz():
         
         #Team info
         self.teams=teams
+        self.n_teams = len(teams)
         self.score=np.zeros(len(teams),dtype=int)
         
         
@@ -38,11 +39,18 @@ class quiz():
         self.answers = iter(self.answers) #Make it an iterator
 
         #Define variables for current answers/questions
+        self.cur_team = 0
         self.cur_answers = self.answers.__next__()
         self.cur_answer_true = self.ans_true.__next__()
         self.cur_question = self.questions.__next__()
 
-    
+    def get_team(self):
+        """
+        return the current team
+        """
+
+
+
     def update_next_question(self):
         """
         Gives the next question and answer self.cur_answer and self.cur_answer_true to the next 
@@ -52,6 +60,10 @@ class quiz():
             self.cur_answers = self.answers.__next__()
             self.cur_answer_true = self.ans_true.__next__()
             self.cur_question = self.questions.__next__()
+            self.cur_team +=1
+            
+            if self.cur_team == self.n_teams: #Reset the team if we are at the end
+                self.cur_team = 0
         except StopIteration: #We are done - return empty answers
             self.cur_answers = [""]*len(self.cur_answers)
             self.cur_question = "<The End>"
@@ -154,10 +166,14 @@ def create_gui(q):
 
     #
     #Scores
-    for i,(team,scores) in enumerate(zip(q.teams,q.score)):
-        score = tkinter.Label(frame_score,text=f"{team}: {scores}")
-        score.config(font=("Courier",20))
-        score.grid(row=i+1,column=0)
+    score_dict = {i:tkinter.Label(frame_score,text=0,font=("Courier",20)) for i in range(len(q.teams))} 
+    for i,label in enumerate(score_dict.values()):       
+        label.grid(row=i+1,column=1)
+    
+    #Teams
+    team_dict = {team:tkinter.Label(frame_score,text=f"{team}:",font=("Courier",20)) for team in q.teams} 
+    for i,label in enumerate(team_dict.values()):       
+        label.grid(row=i+1,column=0)
 
     
     
@@ -184,11 +200,18 @@ def create_gui(q):
 
     def nexts():
         """
-        Updates questions and answers
+        Function for updating points and give the next question/answer
         """
         
-        answer_pressed = chosen_answer.get() #
-        points = check_pressed_answer(answer_pressed)
+        answer_pressed = chosen_answer.get() #index of which answer has been pressed
+        points = check_pressed_answer(answer_pressed) #1 if correct answer, 0 otherwise
+        
+        #Update the points for the current team
+        q.score[q.cur_team] +=points
+        score_dict[q.cur_team].config(text =q.score[q.cur_team])
+
+
+
         
         #Next question and answer
         q.update_next_question()
