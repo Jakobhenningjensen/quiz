@@ -227,9 +227,6 @@ def create_gui(q):
         
     
 
-
-
-
         
 
     #Box with the question
