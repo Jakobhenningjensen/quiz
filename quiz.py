@@ -191,8 +191,7 @@ def main():
     for i in range(n_teams):
         teams.append(input(f"Please write the name of team {i+1}: "))
     q = quiz(teams)
-    if q:
-        create_gui(q)
+    create_gui(q)
 
 if __name__=="__main__":
     main()
